@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EDUPLAN | Seguimiento de Planes de Acreditación</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo-wrap"><img class="brand-img" src="logo_pef_blanco_ua.png" alt="Logo UA CNA Carrera"></div>
+      <div class="brand-text"><h1>EDUPLAN</h1><p>Sistema de gestión, seguimiento y reportabilidad de planes de acreditación</p></div>
+    </div>
+    <nav>
+      <button class="nav active" data-view="dashboard">Dashboard</button>
+      <button class="nav" data-view="matrix">Matriz por carrera</button>
+      <button class="nav" data-view="actions">Acciones evaluables</button>
+      <button class="nav" data-view="reports">Reportabilidad</button>
+      <button class="nav" data-view="config">Criterios CNA/FID</button>
+    </nav>
+    <div class="side-card"><strong>Modelo</strong><span>7 carreras · 3 dimensiones · 6 criterios · debilidades · oportunidades · acciones · evidencias</span></div>
+  </aside>
+
+  <main class="app">
+    <header class="topbar">
+      <div><p class="eyebrow">EDUPLAN · Sistema editable local v8 corregida</p><h2 id="title">Dashboard ejecutivo</h2></div>
+      <div class="top-actions">
+        <button class="btn ghost" id="importBtn">Importar JSON</button><input id="importFile" type="file" accept="application/json" hidden>
+        <button class="btn ghost" id="resetBtn">Restaurar base</button>
+        <button class="btn ghost" id="csvBtn">Exportar CSV</button>
+        <button class="btn primary" id="exportBtn">Exportar JSON</button>
+      </div>
+    </header>
+
+    <section id="dashboard" class="view active">
+      <section class="dashboard-hero">
+        <div>
+          <p class="eyebrow">Lectura ejecutiva</p>
+          <h2 id="heroTitle">Estado general de avance</h2>
+          <p id="heroSubtitle">Seguimiento integrado por carrera, dimensión, criterio, hallazgos y acciones evaluables.</p>
+        </div>
+        <div class="hero-metrics">
+          <div class="donut" id="globalDonut"><span id="donutValue">0%</span></div>
+          <div class="hero-note"><strong id="heroState">Sin datos</strong><span id="heroDetail">Agrega acciones evaluables vinculadas a hallazgos para visualizar el avance.</span></div>
+        </div>
+      </section>
+      <div class="notice">Los cambios se guardan automáticamente en este navegador. Para respaldar o compartir la base, usa <b>Exportar JSON</b>.</div>
+      <div class="filters one-line"><select id="dashCareer"></select><select id="dashDimension"></select><button class="btn primary" id="downloadDashboardBtn">Descargar resumen dashboard</button><button class="btn ghost" id="downloadDashboardWordBtn">Word</button><button class="btn ghost" id="downloadDashboardExcelBtn">Excel</button><button class="btn ghost" id="printDashboardPdfBtn">PDF</button></div>
+      <div class="kpis kpis-executive">
+        <article><span>Avance global</span><strong id="kpiGlobal">0%</strong><small>Promedio de acciones filtradas</small></article>
+        <article><span>Acciones</span><strong id="kpiActions">0</strong><small>Total registradas</small></article>
+        <article><span>Debilidades</span><strong id="kpiWeak">0</strong><small>Brechas declaradas</small></article>
+        <article><span>Oportunidades</span><strong id="kpiOpp">0</strong><small>Mejoras declaradas</small></article>
+        <article><span>En riesgo</span><strong id="kpiRisk">0</strong><small>Atrasadas o bajo avance</small></article>
+        <article><span>Hallazgos cubiertos</span><strong id="kpiCoverage">0%</strong><small>Debilidades/oportunidades con acciones</small></article>
+        <article><span>Medios de verificación</span><strong id="kpiEvidence">0%</strong><small>Acciones con respaldo adjunto o link</small></article>
+      </div>
+      <div class="grid two">
+        <section class="panel"><div class="panel-head"><h3>Avance por carrera</h3><span class="badge">7 planes</span></div><div id="careerProgress" class="progress-list"></div></section>
+        <section class="panel"><div class="panel-head"><h3>Avance por dimensión</h3><span class="badge">3 dimensiones</span></div><div id="dimensionProgress" class="progress-list"></div></section>
+      </div>
+      <section class="panel"><div class="panel-head"><h3>Avance por criterio</h3><span class="badge">Criterios 1–6</span></div><div id="criterionProgress" class="progress-list"></div></section>
+      <section class="panel"><div class="panel-head"><h3>Mapa ejecutivo de cobertura</h3><span class="badge">Criterios con y sin acciones</span></div><div id="coverageMap" class="coverage-map"></div></section>
+      <section class="panel"><div class="panel-head"><h3>Acciones críticas</h3><span class="badge">Seguimiento</span></div><div class="table-wrap"><table><thead><tr><th>Carrera</th><th>Criterio</th><th>Tributa a</th><th>Acción</th><th>Responsable</th><th>Fecha</th><th>Avance</th><th>Estado</th></tr></thead><tbody id="criticalRows"></tbody></table></div></section>
+    </section>
+
+    <section id="matrix" class="view">
+      <div class="filters"><select id="matrixCareer"></select><button class="btn primary" id="addFindingBtn">Agregar debilidad / oportunidad</button></div>
+      <div id="accordion" class="accordion"></div>
+    </section>
+
+    <section id="actions" class="view">
+      <div class="filters">
+        <select id="filterCareer"></select><select id="filterDimension"></select><select id="filterCriterion"></select>
+        <select id="filterStatus"><option value="all">Todos los estados</option><option>No iniciado</option><option>En proceso</option><option>Cumplido</option><option>Atrasado</option></select>
+        <button class="btn primary" id="addActionBtn">Nueva acción evaluable</button>
+      </div>
+      <div class="table-wrap"><table><thead><tr><th>Carrera</th><th>Dimensión</th><th>Criterio</th><th>Tributa a</th><th>Acción evaluable</th><th>Indicador / Meta</th><th>Responsable</th><th>Avance</th><th>Estado</th><th>Gestión</th></tr></thead><tbody id="actionsRows"></tbody></table></div>
+    </section>
+
+    <section id="reports" class="view">
+      <div class="filters one-line"><select id="reportCareer"></select><button class="btn ghost" id="copyReport">Copiar reporte textual</button><button class="btn ghost" id="downloadReportBtn">Descargar TXT</button><button class="btn ghost" id="downloadReportWordBtn">Word</button><button class="btn ghost" id="downloadReportExcelBtn">Excel</button><button class="btn ghost" id="printReportPdfBtn">PDF</button><button class="btn primary" id="downloadReportHtmlBtn">HTML</button></div>
+      <section class="panel report-panel"><div class="panel-head"><h3>Reporte ejecutivo visual</h3><span class="badge">Tablas y síntesis</span></div><div id="reportHtml"></div></section>
+      <details class="raw-report"><summary>Ver reporte textual para copiar</summary><textarea id="reportText" rows="18"></textarea></details>
+    </section>
+
+    <section id="config" class="view">
+      <section class="panel"><h3>Estructura de dimensiones y criterios</h3><p class="muted">Los criterios están organizados conforme a las tres dimensiones señaladas para el seguimiento de acreditación. El campo “nivel estándar” ahora funciona como rúbrica holística: describe qué significa posicionar una acción en Nivel 1, 2 o 3 para cada criterio, con base en los Criterios y Estándares CNA para pedagogías.</p><div id="configList"></div></section>
+    </section>
+  </main>
+
+  <dialog id="findingDialog">
+    <form method="dialog" class="modal" id="findingForm">
+      <h3 id="findingTitle">Agregar hallazgo</h3>
+      <input type="hidden" id="findingId">
+      <label>Carrera<select id="findingCareer"></select></label>
+      <label>Dimensión<select id="findingDimension"></select></label>
+      <label>Criterio<select id="findingCriterion"></select></label>
+      <label>Tipo<select id="findingType"><option value="Debilidad">Debilidad</option><option value="Oportunidad de mejora">Oportunidad de mejora</option></select></label>
+      <label>Descripción<textarea id="findingDescription" rows="5" required placeholder="Ej.: Los pares evaluadores observan que..."></textarea></label>
+      <label>Prioridad<select id="findingPriority"><option>Alta</option><option>Media</option><option>Baja</option></select></label>
+      <menu><button class="btn ghost" value="cancel">Cancelar</button><button class="btn primary" id="saveFinding">Guardar</button></menu>
+    </form>
+  </dialog>
+
+  <dialog id="actionDialog">
+    <form method="dialog" class="modal wide-modal" id="actionForm">
+      <h3 id="actionTitle">Nueva acción evaluable</h3>
+      <input type="hidden" id="actionId">
+      <label>Carrera<select id="actionCareer"></select></label>
+      <label>Dimensión<select id="actionDimension"></select></label>
+      <label>Criterio<select id="actionCriterion"></select></label>
+      <label>Tributa obligatoriamente a debilidad / oportunidad<select id="actionFinding" required><option value="">Selecciona un hallazgo</option></select></label>
+      <label class="full">Acción evaluable<textarea id="actionName" rows="3" required></textarea></label>
+      <label>Indicador<input id="actionIndicator" placeholder="% de avance, N° de evidencias, tasa, etc."></label>
+      <label>Meta<input id="actionTarget" placeholder="Ej.: 100% al cierre del semestre"></label>
+      <label>Responsable<input id="actionOwner" required></label>
+      <label>Fecha inicio<input id="actionStart" type="date"></label>
+      <label>Fecha término<input id="actionEnd" type="date"></label>
+      <label>% avance<input id="actionProgress" type="number" min="0" max="100" value="0"></label>
+      <label>Estado<select id="actionStatus"><option>No iniciado</option><option>En proceso</option><option>Cumplido</option><option>Atrasado</option></select></label>
+      <label>Nivel estándar<select id="actionLevel"><option>Nivel 1</option><option>Nivel 2</option><option>Nivel 3</option></select></label>
+      <label>Evaluación<select id="actionEvaluation"><option>No evaluado</option><option>No cumple</option><option>Cumple parcialmente</option><option>Cumple suficientemente</option><option>Cumple plenamente</option></select></label>
+      <div class="full rubric-box"><h4>Rúbrica holística del nivel estándar</h4><p id="levelRubricText" class="muted">Selecciona criterio y nivel para ver la interpretación.</p></div>
+      <label class="full">Evidencia / link / respaldo<textarea id="actionEvidence" rows="3" placeholder="Registra enlaces, rutas institucionales, folios, actas o referencias breves."></textarea></label>
+      <div class="full evidence-box"><h4>Medios de verificación adjuntos</h4><p class="muted">Adjunta archivos pequeños para dejar registro local en el prototipo. En versión institucional, estos archivos deberían almacenarse en Supabase Storage, Google Drive, SharePoint o repositorio institucional.</p><input id="evidenceFiles" type="file" multiple><div id="evidenceList" class="evidence-list"></div></div>
+      <label class="full">Observaciones de seguimiento<textarea id="actionNotes" rows="3"></textarea></label>
+      <menu><button class="btn ghost" value="cancel">Cancelar</button><button class="btn primary" id="saveAction">Guardar acción</button></menu>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
